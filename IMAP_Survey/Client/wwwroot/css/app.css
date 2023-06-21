@@ -144,6 +144,7 @@ html, body {
         font-size: 13px;
         font-weight: 600;
         width: 100%;
+        user-select: none;
     }
 
 input[type="range"] {

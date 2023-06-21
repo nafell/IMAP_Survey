@@ -1,0 +1,21 @@
+﻿<div style="height:1rem; text-align:left;">
+    <div class="progress" style="--progress-width:@ProgressWidth">@ProgressText</div>
+</div>
+
+<style>
+    .progress{
+        width: var(--progress-width);
+        height: 100%;
+        background-color: lightgreen;
+        font-size: 0.7rem;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public string ProgressWidth { get; set; } = "20%";
+
+    [Parameter]
+    public string ProgressText { get; set; } = "1/5";
+
+}
