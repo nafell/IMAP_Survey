@@ -1,0 +1,139 @@
+﻿@page "/priceandamount"
+@using IMAP_Survey.Client.Services
+@inject NavigationManager NavigationManager
+@inject LocalStorageService dataService
+@inject HttpClient Http
+@inject PostService postService
+
+<div class="content-margin">
+    <div class="content-wrapper">
+
+        <h3>1. 昼食の適正価格の範囲を教えてください。</h3>
+
+        <div class="flex-container input-wrapper">
+            <div class="flex-child-content">
+                <label class="control-label">最安</label>
+                <SfNumericTextBox TValue="int" @bind-Value="@inputData.MinPrice" TabIndex="1"
+                                  Format="￥#####" ShowSpinButton="false" type="number"
+                                  Min=0 Max=50000 StrictMode="true" ValidateDecimalOnType="true" Decimals=0 />
+            </div>
+            <div class="flex-child-separator">
+                ～
+            </div>
+            <div class="flex-child-content">
+                <label class="control-label">上限</label> <label hidden="@(!minmaxError)" class="errorText">最低値より大きい値を入力してください。</label> <label hidden="@(!zeroError)" class="errorText">1以上の値を入力してください。</label>
+                <SfNumericTextBox TValue="int" @bind-Value="@inputData.MaxPrice" TabIndex="2"
+                                  Format="￥#####" ShowSpinButton="false" type="number"
+                                  Min=0 Max=50000 StrictMode="true" ValidateDecimalOnType="true" Decimals=0 />
+            </div>
+        </div>
+
+        <div hidden="@(!isSending)">
+            <SfSpinner Size="40" Label="送信中..." Type="SpinnerType.Tailwind" Visible="true"></SfSpinner>
+        </div>
+
+        <div class="navigation-wrap">
+            <SfButton @onclick="nextButton" IsPrimary="true" TabIndex="3">次へ</SfButton>
+        </div>
+        <div class="navigation-wrap" hidden="@(!inputData.HasUserAnsweredAll)">
+            <SfButton @onclick="submitButton" IsPrimary="true">アンケート送信</SfButton>
+        </div>
+    </div>
+</div>
+
+<style>
+    .flex-container {
+        display: flex;
+        margin-bottom: 24px;
+    }
+
+    .flex-child-content {
+        height: 100%;
+        display: inline-block;
+        min-width: 140px;
+        flex-grow: 1;
+        padding: 0 5px;
+    }
+
+    .flex-child-separator {
+        height: 100%;
+        display: inline-block;
+        width: 15px;
+        flex-grow: 0;
+        align-self: flex-end;
+    }
+</style>
+
+
+@code {
+    private InputData inputData = new();
+
+    private bool minmaxError;
+    private bool zeroError;
+    private bool isSending = false;
+
+    private async Task Send()
+    {
+        await postService.Post(inputData, Http, dataService);
+    }
+    private async Task submitButton()
+    {
+        if (!ValidateInput())
+            return;
+
+        isSending = true;
+        StateHasChanged();
+
+        await Task.Delay(1); //wait 1ms to Update UI thread for the spinner indicator
+
+        await Task.Run(() => Send());
+
+        isSending = false;
+        StateHasChanged();
+        NavigationManager.NavigateTo("/thanks");
+    }
+
+    private async Task nextButton()
+    {
+        if (!ValidateInput())
+            return;
+
+        await dataService.SaveInputData(inputData);
+        NavigationManager.NavigateTo("/capacity");
+    }
+
+    private bool ValidateInput()
+    {
+        var validationSuccess = true;
+
+        if (inputData.MinPrice > inputData.MaxPrice)
+        {
+            minmaxError = true;
+            validationSuccess = false;
+        }
+
+        if (inputData.MaxPrice == 0)
+        {
+            zeroError = true;
+            validationSuccess = false;
+        }
+
+        if (!validationSuccess)
+            return validationSuccess;
+
+        minmaxError = false;
+        zeroError = false;
+        return validationSuccess;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+        inputData = await dataService.LoadInputData();
+
+        StateHasChanged();
+    }
+}

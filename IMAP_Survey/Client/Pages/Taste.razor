@@ -1,0 +1,184 @@
+﻿@page "/taste"
+@using IMAP_Survey.Client.Pages.Components;
+@using IMAP_Survey.Client.Services
+@inject NavigationManager NavigationManager
+@inject LocalStorageService dataService
+@inject HttpClient Http
+@inject PostService postService
+
+<div class="content-margin">
+    <div class="content-wrapper">
+        <h3>3.1 どのような味が好みですか? (1つ選択)</h3>
+
+        <div class="radio-container">
+            <label class="radio" hidden="hidden">
+                <input type="radio" name="capacity" checked="@(TasteSelections.SelectedValue == 0)" onchange="@((ChangeEventArgs _) => TasteSelections.SelectedValue = 0)">
+                <span>Invalid</span>
+            </label>
+            @foreach (var selection in TasteSelections.Selections)
+            {
+                <label class="radio">
+                    <input type="radio" name="capacity" checked="@(TasteSelections.SelectedValue == selection.Code)" onchange="@((ChangeEventArgs _) => TasteSelections.SelectedValue = selection.Code)">
+                    <span>@selection.Text</span>
+                </label>
+            }
+            <label hidden="@(!selectionError)" class="errorText">1つ選択してください。</label>
+        </div>
+
+        <h3>3.2 一番好きな料理を教えてください</h3>
+        <div class="input-wrapper">
+            <SfTextBox Placeholder="料理名" @bind-Value="@Cuisine" CssClass="@CssClassCuisine"></SfTextBox>
+        </div>
+
+        <div hidden="@(!isSending)">
+            <SfSpinner Size="40" Label="送信中..." Type="SpinnerType.Tailwind" Visible="true"></SfSpinner>
+        </div>
+
+        <div class="navigation-wrap">
+            <SfButton @onclick="backButton" IsPrimary="true" CssClass="e-outline">戻る</SfButton>
+            <SfButton @onclick="nextButton" IsPrimary="true">次へ</SfButton>
+        </div>
+        <div class="navigation-wrap" hidden="@(!inputData.HasUserAnsweredAll)">
+            <SfButton @onclick="submitButton" IsPrimary="true">アンケート送信</SfButton>
+        </div>
+    </div>
+</div>
+
+@code {
+    private InputData inputData = new();
+    private bool selectionError = false;
+    private bool isSending = false;
+
+    private SelectionGroup TasteSelections = new SelectionGroup(new[]
+    {
+        "濃い味",
+        "さっぱりした味",
+        "定番の味",
+        "個性的な味",
+        "繊細な味",
+        "高級感のある味",
+    });
+    private bool validationSuccess = true;
+
+    private string CssClassCuisine;
+
+    private string _cuisine;
+    private string Cuisine
+    {
+        get
+        {
+            return _cuisine;
+        }
+        set
+        {
+            if (value == _cuisine)
+                return;
+
+            ValidateInput(value, ref CssClassCuisine);
+
+            _cuisine = value;
+        }
+    }
+
+    private async Task Send()
+    {
+        await postService.Post(inputData, Http, dataService);
+    }
+    private async Task submitButton()
+    {
+        validationSuccess = ValidateInputAndApply();
+        if (!validationSuccess)
+        {
+            return;
+        }
+
+        isSending = true;
+        StateHasChanged();
+
+        await Task.Delay(1); //wait 1ms to Update UI thread for the spinner indicator
+
+        await Task.Run(() => Send());
+
+        isSending = false;
+        StateHasChanged();
+        NavigationManager.NavigateTo("/thanks");
+    }
+
+    private async Task nextButton()
+    {
+        validationSuccess = ValidateInputAndApply();
+        if (!validationSuccess)
+        {
+            return;
+        }
+        await dataService.SaveInputData(inputData);
+        NavigationManager.NavigateTo("/preference");
+    }
+
+    private async Task backButton()
+    {
+        validationSuccess = ValidateInputAndApply();
+        if (inputData.HasUserAnsweredAll && !validationSuccess)
+        {
+            return;
+        }
+        await dataService.SaveInputData(inputData);
+        NavigationManager.NavigateTo("/capacity");
+    }
+
+    private bool ValidateInput(string value, ref string css)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            css = "e-error";
+            return false;
+        }
+
+        css = "e-success";
+        return true;
+    }
+
+    private bool ValidateInputAndApply()
+    {
+        var validation = true;
+
+
+        if (TasteSelections.SelectedValue == 0)
+        {
+            selectionError = true;
+            validation = false;
+        }
+
+        if (TasteSelections.SelectedValue > 6)
+        {
+            selectionError = true;
+            validation = false;
+        }
+
+        selectionError = false;
+
+        if (!ValidateInput(Cuisine, ref CssClassCuisine))
+        {
+            validation = false;
+        }
+
+        inputData.TastePreference = TasteSelections.SelectedValue;
+        inputData.FavouriteCuisine = Cuisine;
+
+        return validation;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+        inputData = await dataService.LoadInputData();
+        TasteSelections.SelectedValue = inputData.TastePreference;
+        Cuisine = inputData.FavouriteCuisine;
+        CssClassCuisine = "e-success";
+
+        StateHasChanged();
+    }
+}

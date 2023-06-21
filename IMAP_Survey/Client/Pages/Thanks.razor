@@ -1,0 +1,24 @@
+﻿@page "/thanks"
+@using IMAP_Survey.Client.Services
+@inject NavigationManager NavigationManager
+@inject LocalStorageService dataService
+
+<div class="content-margin">
+    <div class="content-wrapper">
+        <h3>ご協力ありがとうございました。</h3>
+        入力内容は修正できます。6/n(x)までに再送信してください。<br/>
+
+        <div style="text-align: left;">
+            <SfButton @onclick="backButton" IsPrimary="true" CssClass="e-outline">回答を編集する(1つ戻る)</SfButton>
+        </div>
+    </div>
+</div>
+
+@code {
+    private bool validationSuccess = true;
+
+    private async Task backButton()
+    {
+        NavigationManager.NavigateTo("/favourite");
+    }
+}

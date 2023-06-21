@@ -1,0 +1,160 @@
+﻿@page "/preference"
+@using IMAP_Survey.Client.Pages.Components;
+@using IMAP_Survey.Client.Services
+@inject NavigationManager NavigationManager
+@inject LocalStorageService dataService
+@inject HttpClient Http
+@inject PostService postService
+
+<div class="content-margin">
+    <div class="content-wrapper">
+
+        <h3>4.お昼に外食する際、何を重視しますか?</h3>
+
+
+        <div class="slider-container1">
+            ←無関心　　　　　　重要→
+            <div class="slider-wrap">
+                <label>味:</label>
+                <input type="range" id="volume" name="volume" @bind=Taste.Value @oninput="ShowData" min="0" max="100" />
+            </div>
+            <div class="slider-wrap">
+                <label>値段の安さ:</label>
+                <input type="range" id="volume" name="volume" @bind=Pricing.Value @oninput="ShowData" min="0" max="100" />
+            </div>
+            <div class="slider-wrap">
+                <label>量の多さ:</label>
+                <input type="range" id="volume" name="volume" @bind=Amount.Value @oninput="ShowData" min="0" max="100" />
+            </div>
+            <div class="slider-wrap">
+                <label>お店の雰囲気:</label>
+                <input type="range" id="volume" name="volume" @bind=Atmosphere.Value @oninput="ShowData" min="0" max="100" />
+            </div>
+            <div class="slider-wrap">
+                <label>栄養バランス:</label>
+                <input type="range" id="volume" name="volume" @bind=Nuturition.Value @oninput="ShowData" min="0" max="100" />
+            </div>
+        </div>
+
+        <div class="piechart">
+            <SfAccumulationChart Width="360px" Height="360px" Background="#ffffff00">
+                <AccumulationChartLegendSettings Visible="false"></AccumulationChartLegendSettings>
+                <AccumulationChartSeriesCollection>
+                    <AccumulationChartSeries DataSource="@StatisticsDetails" XName="ElementName" YName="Contribution" StartAngle="270" EndAngle="90" Radius="100%" InnerRadius="40%">
+                        <AccumulationDataLabelSettings Visible="true" Name="ElementName" Position="AccumulationLabelPosition.Inside">
+                            <AccumulationChartDataLabelFont FontWeight="600" Color="black"></AccumulationChartDataLabelFont>
+                        </AccumulationDataLabelSettings>
+                    </AccumulationChartSeries>
+                </AccumulationChartSeriesCollection>
+            </SfAccumulationChart>
+        </div>
+
+        <div hidden="@(!isSending)">
+            <SfSpinner Size="40" Label="送信中..." Type="SpinnerType.Tailwind" Visible="true"></SfSpinner>
+        </div>
+
+        <div class="navigation-wrap">
+            <SfButton @onclick="backButton" IsPrimary="true" CssClass="e-outline">戻る</SfButton>
+            <SfButton @onclick="nextButton" IsPrimary="true">次へ</SfButton>
+        </div>
+        <div class="navigation-wrap" hidden="@(!inputData.HasUserAnsweredAll)">
+            <SfButton @onclick="submitButton" IsPrimary="true">アンケート送信</SfButton>
+        </div>
+    </div>
+</div>
+
+
+@code {
+    private InputData inputData = new();
+    private bool isFirstRender = true;
+    private bool isSending = false;
+
+    private ActiveProperty<int> Taste = new ActiveProperty<int>(50, null);
+    private ActiveProperty<int> Pricing = new ActiveProperty<int>(50, null);
+    private ActiveProperty<int> Amount = new ActiveProperty<int>(50, null);
+    private ActiveProperty<int> Atmosphere = new ActiveProperty<int>(50, null);
+    private ActiveProperty<int> Nuturition = new ActiveProperty<int>(50, null);
+
+    private async Task Send()
+    {
+        await postService.Post(inputData, Http, dataService);
+    }
+    private async Task submitButton()
+    {
+        isSending = true;
+        StateHasChanged();
+
+        await Task.Delay(1); //wait 1ms to Update UI thread for the spinner indicator
+
+        await Task.Run(() => Send());
+
+        isSending = false;
+        StateHasChanged();
+        NavigationManager.NavigateTo("/thanks");
+    }
+
+    private async Task nextButton()
+    {
+        await SaveData();
+        NavigationManager.NavigateTo("/favourite");
+    }
+    private async Task backButton()
+    {
+        await SaveData();
+        NavigationManager.NavigateTo("/taste");
+    }
+
+    private async Task SaveData()
+    {
+        inputData.TasteContribution = Taste.Value;
+        inputData.PricingContribution = Pricing.Value;
+        inputData.AmountContribution = Amount.Value;
+        inputData.AtmosphereContribution = Atmosphere.Value;
+        inputData.NuturitionContribution = Nuturition.Value;
+        await dataService.SaveInputData(inputData);
+    }
+
+    public class Statistics
+    {
+        public string ElementName { get; set; }
+        public double Contribution { get; set; }
+    }
+
+    public List<Statistics> StatisticsDetails;
+
+    private void ShowData()
+    {
+        StatisticsDetails = new List<Statistics>
+        {
+            new Statistics { ElementName = "味",         Contribution = Taste.Value },
+            new Statistics { ElementName = "値段の安さ",  Contribution = Pricing.Value },
+            new Statistics { ElementName = "量の多さ",    Contribution = Amount.Value },
+            new Statistics { ElementName = "お店の雰囲気", Contribution = Atmosphere.Value },
+            new Statistics { ElementName = "栄養バランス", Contribution = Nuturition.Value },
+        };
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!isFirstRender)
+        {
+            return;
+        }
+        isFirstRender = false;
+
+        inputData = await dataService.LoadInputData();
+
+        Taste = new ActiveProperty<int>(inputData.TasteContribution, ShowData);
+        Pricing = new ActiveProperty<int>(inputData.PricingContribution, ShowData);
+        Amount = new ActiveProperty<int>(inputData.AmountContribution, ShowData);
+        Atmosphere = new ActiveProperty<int>(inputData.AtmosphereContribution, ShowData);
+        Nuturition = new ActiveProperty<int>(inputData.NuturitionContribution, ShowData);
+
+        ShowData();
+
+        StateHasChanged();
+
+        await Task.Delay(500);
+        ShowData();
+    }
+}

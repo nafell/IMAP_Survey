@@ -1,0 +1,39 @@
+﻿.radio-container {
+    margin: 0 10px;
+    text-align: center;
+}
+
+label.radio {
+    cursor: pointer;
+}
+
+    label.radio input {
+        opacity: 0;
+        filter: alpha(opacity=0);
+        position: absolute
+    }
+
+    label.radio span {
+        padding: 5px 14px;
+        margin: 2px 0;
+        border: 2px solid #ddd;
+        background-color: #fbfbfb;
+        display: inline-block;
+        border-radius: 5px;
+        width: 90%;
+        text-align: left;
+    }
+
+    label.radio input:checked + span {
+        border-color: #1f66cd;
+        background-color: #0d6efd;
+        color: #ffffff;
+    }
+
+    label.radio span:hover {
+        background-color: #eee;
+    }
+
+    label.radio input:focus + span {
+        border-color: #1f66cd;
+    }

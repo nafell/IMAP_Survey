@@ -1,0 +1,170 @@
+﻿@page "/favourite"
+@using IMAP_Survey.Client.Services
+@inject NavigationManager NavigationManager
+@inject LocalStorageService dataService
+@inject HttpClient Http
+@inject PostService postService
+
+<div class="content-margin">
+    <div class="content-wrapper">
+        <h3>5.大学周辺で一番おすすめしたいお店と料理名を教えてください</h3>
+
+        <div class="input-wrapper">
+            <div style="margin-bottom:12px">
+                <SfTextBox Placeholder="店名" @bind-Value="@Restaurant" CssClass="@CssClassRestaurant"></SfTextBox>
+            </div>
+            <div style="margin-bottom:24px">
+                <SfTextBox Placeholder="料理名" @bind-Value="@Cuisine" CssClass="@CssClassCuisine"></SfTextBox>
+            </div>
+
+            <div hidden="@(!isSending)">
+                <SfSpinner Size="40" Label="送信中..." Type="SpinnerType.Tailwind" Visible="true"></SfSpinner>
+            </div>
+
+
+        </div>
+        <div class="navigation-wrap">
+            <SfButton @onclick="backButton" IsPrimary="true" CssClass="e-outline">戻る</SfButton>
+            <SfButton @onclick="nextButton" IsPrimary="true">アンケート送信</SfButton>
+        </div>
+    </div>
+</div>
+
+@code {
+    private InputData inputData = new();
+    private bool validationSuccess = true;
+
+    private bool isSending = false;
+
+    private string CssClassRestaurant;
+    private string CssClassCuisine;
+
+    private string _restaurant;
+    private string Restaurant
+    {
+        get
+        {
+            return _restaurant;
+        }
+        set
+        {
+            if (value == _restaurant)
+                return;
+
+            ValidateInput(value, ref CssClassRestaurant);
+
+            _restaurant = value;
+        }
+    }
+
+    private string _cuisine;
+    private string Cuisine
+    {
+        get
+        {
+            return _cuisine;
+        }
+        set
+        {
+            if (value == _cuisine)
+                return;
+
+            ValidateInput(value, ref CssClassCuisine);
+
+            _cuisine = value;
+        }
+    }
+
+
+
+    private async Task nextButton()
+    {
+        validationSuccess = ValidateInput();
+        if (!validationSuccess)
+        {
+            return;
+        }
+        inputData.HasUserAnsweredAll = true;
+        await dataService.SaveInputData(inputData);
+
+        isSending = true;
+        StateHasChanged();
+
+        await Task.Delay(1); //wait 1ms to Update UI thread for the spinner indicator
+
+        await Task.Run(() => Send());
+
+        isSending = false;
+        StateHasChanged();
+
+        NavigationManager.NavigateTo("/thanks");
+    }
+
+    private async Task Send()
+    {
+        await postService.Post(inputData, Http, dataService);
+    }
+
+    private async Task backButton()
+    {
+        validationSuccess = ValidateInput();
+        if (validationSuccess)
+        {
+            inputData.HasUserAnsweredAll = true;
+        }
+        if (inputData.HasUserAnsweredAll && !validationSuccess)
+        {
+            return;
+        }
+        await dataService.SaveInputData(inputData);
+        NavigationManager.NavigateTo("/preference");
+    }
+
+    private bool ValidateInput(string value, ref string css)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            css = "e-error";
+            return false;
+        }
+
+        css = "e-success";
+        return true;
+    }
+
+    private bool ValidateInput()
+    {
+        var result = true;
+
+        if (!ValidateInput(Restaurant, ref CssClassRestaurant))
+        {
+            result = false;
+        }
+
+        if (!ValidateInput(Cuisine, ref CssClassCuisine))
+        {
+            result = false;
+        }
+
+        inputData.RecommendedRestaurant = Restaurant;
+        inputData.RecommendedCuisine = Cuisine;
+
+        return result;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+        inputData = await dataService.LoadInputData();
+
+        Restaurant = inputData.RecommendedRestaurant;
+        Cuisine = inputData.RecommendedCuisine;
+
+        CssClassCuisine = "e-success";
+        CssClassRestaurant = "e-success";
+        StateHasChanged();
+    }
+}

@@ -1,0 +1,40 @@
+﻿@page "/"
+@using IMAP_Survey.Client.Services
+@inject LocalStorageService dataService
+@inject NavigationManager NavigationManager
+@using Syncfusion.Blazor.Charts
+
+<div class="content-margin">
+    <div class="content-wrapper">
+        <h2>Mapbox 地域共創アンケート</h2>
+        本アンケートはアプリ開発の統計のみに利用されます。<br />
+        個人を特定する情報は取得しません。<br />
+        質問は5つです。<br />
+
+        <div class="navigation-wrap">
+            <SfButton @onclick="nextButton" IsPrimary="true">アンケートを開始する</SfButton>
+            @*<SfButton @onclick="devButton" IsPrimary="true">％</SfButton>*@
+        </div>
+    </div>
+</div>
+
+<style>
+
+</style>
+
+@code {
+
+    private async Task nextButton()
+    {
+        //await dataService.SaveInputData(new InputData());
+        NavigationManager.NavigateTo("/priceandamount");
+    }
+
+    private async Task devButton()
+    {
+        NavigationManager.NavigateTo("/preference");
+
+    }
+
+
+}

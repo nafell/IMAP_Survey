@@ -1,0 +1,135 @@
+﻿@page "/capacity"
+@using IMAP_Survey.Client.Pages.Components;
+@using IMAP_Survey.Client.Services
+@inject NavigationManager NavigationManager
+@inject LocalStorageService dataService
+@inject HttpClient Http
+@inject PostService postService
+
+<div class="content-margin">
+    <div class="content-wrapper">
+        <h3>2.昼食はどのくらいで満腹になりますか? (1つ選択)</h3>
+
+        <div class="radio-container">
+            <label class="radio" hidden="hidden">
+                <input type="radio" name="capacity" checked="@(CapacitySelections.SelectedValue == 0)" onchange="@((ChangeEventArgs _) => CapacitySelections.SelectedValue = 0)">
+                <span>Invalid</span>
+            </label>
+            @foreach (var selection in CapacitySelections.Selections)
+            {
+                <label class="radio">
+                    <input type="radio" name="capacity" checked="@(CapacitySelections.SelectedValue == selection.Code)" onchange="@((ChangeEventArgs _) => CapacitySelections.SelectedValue = selection.Code)">
+                    <span>@selection.Text</span>
+                </label>
+            }
+            <label hidden="@(!selectionError)" class="errorText">1つ選択してください。</label>
+        </div>
+
+        <div hidden="@(!isSending)">
+            <SfSpinner Size="40" Label="送信中..." Type="SpinnerType.Tailwind" Visible="true"></SfSpinner>
+        </div>
+
+        <div class="navigation-wrap">
+            <SfButton @onclick="backButton" IsPrimary="true" CssClass="e-outline">戻る</SfButton>
+            <SfButton @onclick="nextButton" IsPrimary="true">次へ</SfButton>
+        </div>
+        <div class="navigation-wrap" hidden="@(!inputData.HasUserAnsweredAll)">
+            <SfButton @onclick="submitButton" IsPrimary="true">アンケート送信</SfButton>
+        </div>
+    </div>
+</div>
+
+@code {
+    private InputData inputData = new();
+    private bool selectionError = false;
+    private bool validationSuccess = true;
+    private bool isSending = false;
+
+    private SelectionGroup CapacitySelections = new SelectionGroup(new[]
+    {
+        "100~150g（おにぎり1個、カップ麺）",
+        "200~250g（素うどん、素そば1杯）",
+        "250~300g（ラーメン1杯）",
+        "300~350g（牛丼大盛り）",
+        "350g~ それ以上",
+    });
+
+    private async Task Send()
+    {
+        await postService.Post(inputData, Http, dataService);
+    }
+    private async Task submitButton()
+    {
+        validationSuccess = ValidateInputAndApply();
+        if (!validationSuccess)
+        {
+            return;
+        }
+
+        isSending = true;
+        StateHasChanged();
+
+        await Task.Delay(1); //wait 1ms to Update UI thread for the spinner indicator
+
+        await Task.Run(() => Send());
+
+        isSending = false;
+        StateHasChanged();
+        NavigationManager.NavigateTo("/thanks");
+    }
+
+    private async Task nextButton()
+    {
+        validationSuccess = ValidateInputAndApply();
+        if (!validationSuccess)
+        {
+            return;
+        }
+        await dataService.SaveInputData(inputData);
+        NavigationManager.NavigateTo("/taste");
+    }
+
+    private async Task backButton()
+    {
+        validationSuccess = ValidateInputAndApply();
+        if (inputData.HasUserAnsweredAll && !validationSuccess)
+        {
+            return;
+        }
+        await dataService.SaveInputData(inputData);
+        NavigationManager.NavigateTo("/priceandamount");
+    }
+
+    private bool ValidateInputAndApply()
+    {
+        if (CapacitySelections.SelectedValue == 0)
+        {
+            selectionError = true;
+            return false;
+        }
+
+        if (CapacitySelections.SelectedValue > 5)
+        {
+            selectionError = true;
+            return false;
+        }
+
+        selectionError = false;
+
+        inputData.CapacitySelection = CapacitySelections.SelectedValue;
+
+        return true;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+        inputData = await dataService.LoadInputData();
+        CapacitySelections.SelectedValue = inputData.CapacitySelection;
+
+        StateHasChanged();
+    }
+}
