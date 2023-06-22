@@ -23,8 +23,8 @@
                     <span>@selection.Text</span>
                 </label>
             }
-            <label hidden="@(!selectionError)" class="errorText">1つ選択してください。</label>
         </div>
+        <label hidden="@(!selectionError)" class="errorText">1つ選択してください。</label>
 
         <div hidden="@(!isSending)">
             <SfSpinner Size="40" Label="送信中..." Type="SpinnerType.Tailwind" Visible="true"></SfSpinner>
@@ -32,7 +32,7 @@
 
         <div class="navigation-wrap">
             <SfButton @onclick="backButton" IsPrimary="true" CssClass="e-outline">戻る</SfButton>
-            <SfButton @onclick="nextButton" IsPrimary="true">次へ</SfButton>
+            <SfButton @onclick="nextButton" IsPrimary="true">　次へ　</SfButton>
         </div>
         <div class="navigation-wrap" hidden="@(!inputData.HasUserAnsweredAll)">
             <SfButton @onclick="submitButton" IsPrimary="true">アンケート送信</SfButton>

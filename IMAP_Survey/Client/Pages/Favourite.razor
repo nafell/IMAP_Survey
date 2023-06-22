@@ -14,9 +14,11 @@
         <div class="input-wrapper">
             <div style="margin-bottom:12px">
                 <SfTextBox Placeholder="店名" @bind-Value="@Restaurant" CssClass="@CssClassRestaurant"></SfTextBox>
+                <label hidden="@(!restaurantError)" class="errorText">店名を入力してください。</label>
             </div>
             <div style="margin-bottom:24px">
                 <SfTextBox Placeholder="料理名" @bind-Value="@Cuisine" CssClass="@CssClassCuisine"></SfTextBox>
+                <label hidden="@(!cuisineError)" class="errorText">料理名を入力してください。</label>
             </div>
 
             <div hidden="@(!isSending)">
@@ -35,6 +37,8 @@
 @code {
     private InputData inputData = new();
     private bool validationSuccess = true;
+    private bool restaurantError = false;
+    private bool cuisineError = false;
 
     private bool isSending = false;
 
@@ -53,7 +57,7 @@
             if (value == _restaurant)
                 return;
 
-            ValidateInput(value, ref CssClassRestaurant);
+            ValidateInput(value, ref CssClassRestaurant, ref restaurantError);
 
             _restaurant = value;
         }
@@ -71,7 +75,7 @@
             if (value == _cuisine)
                 return;
 
-            ValidateInput(value, ref CssClassCuisine);
+            ValidateInput(value, ref CssClassCuisine, ref cuisineError);
 
             _cuisine = value;
         }
@@ -122,15 +126,17 @@
         NavigationManager.NavigateTo("/preference");
     }
 
-    private bool ValidateInput(string value, ref string css)
+    private bool ValidateInput(string value, ref string css, ref bool error)
     {
         if (string.IsNullOrEmpty(value))
         {
             css = "e-error";
+            error = true;
             return false;
         }
 
         css = "e-success";
+        error = false;
         return true;
     }
 
@@ -138,12 +144,12 @@
     {
         var result = true;
 
-        if (!ValidateInput(Restaurant, ref CssClassRestaurant))
+        if (!ValidateInput(Restaurant, ref CssClassRestaurant, ref restaurantError))
         {
             result = false;
         }
 
-        if (!ValidateInput(Cuisine, ref CssClassCuisine))
+        if (!ValidateInput(Cuisine, ref CssClassCuisine, ref cuisineError))
         {
             result = false;
         }

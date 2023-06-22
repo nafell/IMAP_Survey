@@ -22,10 +22,12 @@
                 ～
             </div>
             <div class="flex-child-content">
-                <label class="control-label">上限</label> <label hidden="@(!minmaxError)" class="errorText">最低値より大きい値を入力してください。</label> <label hidden="@(!zeroError)" class="errorText">1以上の値を入力してください。</label>
+                <label class="control-label">上限</label>
                 <SfNumericTextBox TValue="int" @bind-Value="@inputData.MaxPrice" TabIndex="2"
                                   Format="￥#####" ShowSpinButton="false" type="number"
                                   Min=0 Max=50000 StrictMode="true" ValidateDecimalOnType="true" Decimals=0 />
+                <label hidden="@(!minmaxError)" class="errorText">最低値より大きい値を入力してください。<br/></label>
+                <label hidden="@(!zeroError)" class="errorText">1以上の値を入力してください。</label>
             </div>
         </div>
 
@@ -34,7 +36,7 @@
         </div>
 
         <div class="navigation-wrap">
-            <SfButton @onclick="nextButton" IsPrimary="true" TabIndex="3">次へ</SfButton>
+            <SfButton @onclick="nextButton" IsPrimary="true" TabIndex="3">　次へ　</SfButton>
         </div>
         <div class="navigation-wrap" hidden="@(!inputData.HasUserAnsweredAll)">
             <SfButton @onclick="submitButton" IsPrimary="true">アンケート送信</SfButton>
@@ -61,7 +63,7 @@
         display: inline-block;
         width: 15px;
         flex-grow: 0;
-        align-self: flex-end;
+        padding-top: 2rem;
     }
 </style>
 

@@ -24,12 +24,13 @@
                     <span>@selection.Text</span>
                 </label>
             }
-            <label hidden="@(!selectionError)" class="errorText">1つ選択してください。</label>
         </div>
+        <label hidden="@(!selectionError)" class="errorText">1つ選択してください。</label>
 
         <h3>3.2 一番好きな料理を教えてください</h3>
         <div class="input-wrapper">
             <SfTextBox Placeholder="料理名" @bind-Value="@Cuisine" CssClass="@CssClassCuisine"></SfTextBox>
+            <label hidden="@(!cuisineError)" class="errorText">料理名を入力してください。</label>
         </div>
 
         <div hidden="@(!isSending)">
@@ -38,7 +39,7 @@
 
         <div class="navigation-wrap">
             <SfButton @onclick="backButton" IsPrimary="true" CssClass="e-outline">戻る</SfButton>
-            <SfButton @onclick="nextButton" IsPrimary="true">次へ</SfButton>
+            <SfButton @onclick="nextButton" IsPrimary="true">　次へ　</SfButton>
         </div>
         <div class="navigation-wrap" hidden="@(!inputData.HasUserAnsweredAll)">
             <SfButton @onclick="submitButton" IsPrimary="true">アンケート送信</SfButton>
@@ -49,6 +50,7 @@
 @code {
     private InputData inputData = new();
     private bool selectionError = false;
+    private bool cuisineError = false;
     private bool isSending = false;
 
     private SelectionGroup TasteSelections = new SelectionGroup(new[]
@@ -133,9 +135,11 @@
         if (string.IsNullOrEmpty(value))
         {
             css = "e-error";
+            cuisineError = true;
             return false;
         }
 
+        cuisineError = true;
         css = "e-success";
         return true;
     }

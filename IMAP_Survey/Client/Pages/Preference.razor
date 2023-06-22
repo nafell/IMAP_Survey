@@ -57,7 +57,7 @@
 
         <div class="navigation-wrap">
             <SfButton @onclick="backButton" IsPrimary="true" CssClass="e-outline">戻る</SfButton>
-            <SfButton @onclick="nextButton" IsPrimary="true">次へ</SfButton>
+            <SfButton @onclick="nextButton" IsPrimary="true">　次へ　</SfButton>
         </div>
         <div class="navigation-wrap" hidden="@(!inputData.HasUserAnsweredAll)">
             <SfButton @onclick="submitButton" IsPrimary="true">アンケート送信</SfButton>
@@ -79,6 +79,7 @@
 
     private async Task Send()
     {
+        await SaveData();
         await postService.Post(inputData, Http, dataService);
     }
     private async Task submitButton()
