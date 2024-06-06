@@ -8,9 +8,9 @@ namespace IMAP_Survey.Server.Controllers
     [Route("api/[controller]")]
     public class DatabaseController : ControllerBase
     {
-        private static readonly string EndpointUri = "https://imap-preference-survey.documents.azure.com:443/";
+        private static readonly string EndpointUri = ApiKey.CosmosEndpoint;
 
-        private static readonly string PrimaryKey = "D0nLciS7KIkW7nFA5qkVP0g1CrDByUR9roXUfPgsAxJu1lWzW3ZDoOVBkQhdTLOc4O7ufwRBgIDVACDbuKuBrA==";
+        private static readonly string PrimaryKey = ApiKey.CosmosPK;
 
         private CosmosClient cosmosClient;
         private Database database;

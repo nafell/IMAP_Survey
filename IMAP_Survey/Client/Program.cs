@@ -17,6 +17,6 @@ builder.Services.AddScoped<PostService>();
 // Supply HttpClient instances that include access tokens when making requests to the server project
 builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("IMAP_Survey.ServerAPI"));
 
-Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("MjQxNDEwM0AzMjMxMmUzMTJlMzMzNU5pdnVvSVJYWVkzYS9jNkxpbjh6elo0MEZONjFoZjlpaUNoWGdyeGlhbzQ9");
+Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense(ApiKeys.Syncfusion);
 
 await builder.Build().RunAsync();
